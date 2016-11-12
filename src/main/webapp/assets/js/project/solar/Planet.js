@@ -23,8 +23,6 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'CanvasClickProxy'], function
         this.satellites = data.satellites;
     }
 
-    Planet.orbitGradient = null;
-
     Planet.prototype.draw = function(context, zoomWindow, locations) {
         var size = Math.min(context.canvas.width, context.canvas.height);
         var planetInfo = Planet.drawPlanetoid(this, context, zoomWindow,
@@ -48,6 +46,15 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'CanvasClickProxy'], function
         }
     };
 
+    Planet.prototype.getX = function( ) {
+        return (Math.cos(this.angle) * this.radius) + SolarSystem.radius;
+    };
+
+    Planet.prototype.getY = function() {
+        return (Math.sin(this.angle) * this.radius) + SolarSystem.radius;
+    };
+
+
     Planet.drawPlanetoid = function(planetoid, context, zoomWindow, locations, center, colors) {
         if(planetoid.speed) {
             if(planetoid.backMove) {
@@ -56,17 +63,17 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'CanvasClickProxy'], function
                 planetoid.angle += Math.PI / (planetoid.speed * Profile.speed);
             }
         }
-        var orbitRadius = planetoid.orbit * zoomWindow.ratio;
+        var orbitRadius = planetoid.orbit;
         var planetRadius = planetoid.radius * zoomWindow.ratio;
-        var x = Math.cos(planetoid.angle) * orbitRadius + center.x;
-        var y = Math.sin(planetoid.angle) * orbitRadius + center.y;
+        var x = ((Math.cos(planetoid.angle) * orbitRadius + SolarSystem.radius) - zoomWindow.rectangle.x) * zoomWindow.ratio;
+        var y = ((Math.sin(planetoid.angle) * orbitRadius + SolarSystem.radius) - zoomWindow.rectangle.y) * zoomWindow.ratio;
         context.beginPath();
         context.strokeStyle = colors.orbit;
-        if(planetoid.backMove) {
+        /*if(planetoid.backMove) {
             context.arc(center.x, center.y, orbitRadius,  planetoid.angle, planetoid.angle + Math.PI / 4, false);
         } else {
             context.arc(center.x, center.y, orbitRadius, planetoid.angle, planetoid.angle - Math.PI / 4, true);
-        }
+        }*/
         context.stroke();
 
         context.strokeStyle = colors.planetoid;

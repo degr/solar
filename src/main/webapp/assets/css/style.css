@@ -5,3 +5,8 @@ body, html{
 *{
     box-sizing: border-box;
 }
+.solar {
+    left: 0;
+    top: 0;
+    position: absolute;
+}

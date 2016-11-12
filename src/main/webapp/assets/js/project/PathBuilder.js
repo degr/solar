@@ -4,12 +4,8 @@ Engine.define("PathBuilder", function(){
     }
 
     PathBuilder.prototype.buildPath = function(module) {
-        var path;
+        var path = null;
         switch (module) {
-            case 'CanvasImage':
-            case 'CanvasClickProxy':
-                path = 'canvas/' + module;
-                break;
             case 'SpaceShip':
                 path = 'ships/' + module;
                 break;
@@ -24,8 +20,6 @@ Engine.define("PathBuilder", function(){
             case 'Profile':
                 path = module;
                 break;
-            default:
-                throw 'Unkown class - ' + module;
         }
         return (path ? 'assets/js/project/' + path + ".js?seed" + this.seed  : '');
     };

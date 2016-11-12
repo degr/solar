@@ -3,6 +3,7 @@
 <head>
     <script src="assets/js/org/forweb/forweb.js"></script>
     <script src="assets/js/project/PathBuilder.js"></script>
+    <script src="assets/js/project/CanvasPathBuilder.js"></script>
     <link href="assets/css/style.css" rel="stylesheet"/>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -11,7 +12,9 @@
 <script>
     (function() {
         var PathBuilder = Engine.require('PathBuilder');
-        Engine.pathBuilder = [new PathBuilder("a")];
+        var CanvasPathBuilder = Engine.require('CanvasPathBuilder');
+        var version = 'a';
+        Engine.pathBuilder = [new PathBuilder(version), new CanvasPathBuilder(version)];
         Engine.load('Startup', function(){
             var Startup = Engine.require('Startup');
             Startup.start();
