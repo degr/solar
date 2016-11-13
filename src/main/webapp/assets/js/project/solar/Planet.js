@@ -36,9 +36,10 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'CanvasClickProxy'], function
 
 
         if(this.satellites && this.satellites.length) {
+            var ratio = zoomWindow.getRatio();
             if (planetInfo.radius > 2) {
-                var shiftX = planetInfo.x / zoomWindow.ratio + zoomWindow.rectangle.x;
-                var shiftY = planetInfo.y / zoomWindow.ratio + zoomWindow.rectangle.y;
+                var shiftX = planetInfo.x / ratio + zoomWindow.rectangle.x;
+                var shiftY = planetInfo.y / ratio + zoomWindow.rectangle.y;
                 for (var i = 0; i < this.satellites.length; i++) {
                     Planet.drawPlanetoid(
                         this.satellites[i],
@@ -71,11 +72,7 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'CanvasClickProxy'], function
         if(planetoid.speed) {
             if(planetoid.backMove) {
                 planetoid.angle -= Math.PI / (planetoid.speed * Profile.speed);
-                console.log(planetoid.name, planetoid.angle);
             } else {
-                if(planetoid.name.indexOf('lun') == 0) {
-                    console.log(planetoid.name, planetoid.angle);
-                }
                 planetoid.angle += Math.PI / (planetoid.speed * Profile.speed);
             }
         }
@@ -84,25 +81,26 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'CanvasClickProxy'], function
     Planet.drawPlanetoid = function(planetoid, context, zoomWindow, locations, colors, shiftX, shiftY) {
         Planet.updateAngle(planetoid);
         var orbitRadius = planetoid.orbit;
-        var planetRadius = planetoid.radius * zoomWindow.ratio;
-        var x = ((Math.cos(planetoid.angle) * orbitRadius + shiftX) - zoomWindow.rectangle.x) * zoomWindow.ratio;
-        var y = ((Math.sin(planetoid.angle) * orbitRadius + shiftY) - zoomWindow.rectangle.y) * zoomWindow.ratio;
+        var ratio = zoomWindow.getRatio();
+        var planetRadius = planetoid.radius * ratio;
+        var x = ((Math.cos(planetoid.angle) * orbitRadius + shiftX) - zoomWindow.rectangle.x) * ratio;
+        var y = ((Math.sin(planetoid.angle) * orbitRadius + shiftY) - zoomWindow.rectangle.y) * ratio;
         context.beginPath();
         context.strokeStyle = colors.orbit;
         if(planetoid.backMove) {
             context.arc(
-                (shiftX - zoomWindow.rectangle.x) * zoomWindow.ratio,
-                (shiftY  - zoomWindow.rectangle.y)* zoomWindow.ratio,
-                orbitRadius* zoomWindow.ratio,
+                (shiftX - zoomWindow.rectangle.x) * ratio,
+                (shiftY  - zoomWindow.rectangle.y)* ratio,
+                orbitRadius* ratio,
                 planetoid.angle ,
                 planetoid.angle + Math.PI / 4,
                 false
             );
         } else {
             context.arc(
-                (shiftX - zoomWindow.rectangle.x) * zoomWindow.ratio,
-                (shiftY  - zoomWindow.rectangle.y)* zoomWindow.ratio,
-                orbitRadius* zoomWindow.ratio,
+                (shiftX - zoomWindow.rectangle.x) * ratio,
+                (shiftY  - zoomWindow.rectangle.y)* ratio,
+                orbitRadius* ratio,
                 planetoid.angle,
                 planetoid.angle - Math.PI / 4,
                 true
@@ -120,11 +118,11 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'CanvasClickProxy'], function
             context.drawImage(planetoid.image, x - pseudoRadius, y - pseudoRadius, pseudoRadius * 2, pseudoRadius * 2 );
         }
 
-        context.textAlign = 'center';
+        /*context.textAlign = 'center';
         context.strokeStyle = colors.label;
-        context.strokeText(planetoid.name, x, y);
+        context.strokeText(planetoid.name, x, y);*/
         locations.push(new CanvasClickProxy(x, y, planetRadius < 5 ? 5 : planetRadius, function(params){
-            console.log(planetoid);
+            console.log(planetoid, params);
         }));
         context.strokeStyle = 'black';
         return {

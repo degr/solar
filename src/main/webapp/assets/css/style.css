@@ -10,3 +10,23 @@ body, html{
     top: 0;
     position: absolute;
 }
+
+.Popup .minimized{
+
+}
+.Popup {
+    position: absolute;
+    border: 1px solid black;
+    background: white;
+    padding: 8px;
+    min-width: 234px;
+}
+.Popup-minimize {
+    background: green;
+    border: none;
+    border-radius: 50%;
+    height: 16px;
+    width: 16px;
+    position: absolute;
+    right: 10px;
+}

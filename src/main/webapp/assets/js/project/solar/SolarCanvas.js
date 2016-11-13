@@ -1,4 +1,6 @@
-Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'SolarSystem', 'CanvasImage','CanvasPattern', 'Profile', 'SpaceShip', 'CanvasClickProxy'], function () {
+Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow',
+    'SolarSystem', 'CanvasImage','CanvasPattern', 'ClickContext', 'Profile',
+    'CanvasClickProxy', 'SpaceShip', 'SpaceShipParams'], function () {
 
     var ScreenUtils = Engine.require('ScreenUtils');
     var SolarSystem = Engine.require('SolarSystem');
@@ -6,8 +8,10 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
     var Planets = Engine.require('Planets');
     var Dom = Engine.require('Dom');
     var CanvasImage = Engine.require('CanvasImage');
+    var ClickContext = Engine.require('ClickContext');
     var CanvasPattern = Engine.require('CanvasPattern');
     var SpaceShip = Engine.require('SpaceShip');
+    var SpaceShipParams = Engine.require('SpaceShipParams');
     var Profile = Engine.require('Profile');
 
 
@@ -19,7 +23,7 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
         me.sizeY = null;
         me.zoom = 1;
         me.context = me.canvas.getContext('2d');
-        me.offset = null;
+        me.offset = {};
         me.updateZoomWindow = false;
         me.mouseDown = {active: false, x: null, y: null};
         Dom.addListeners(me.canvas, {
@@ -37,6 +41,9 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
             },
             onmouseup: function(e) {
                 me.onMouseUp(e);
+            },
+            oncontextmenu: function(e) {
+                me.onContextMenu(e);
             }
         });
         document.body.appendChild(me.canvas);
@@ -45,7 +52,7 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
                 me.onResize();
             }
         };
-
+        me.subscribers = [];
         me.background = new CanvasPattern(0, 0, Profile.path + "/assets/images/space/2.jpg", 0, 0);
         me.onResize();
         me.x = this.canvas.width / 2;
@@ -53,8 +60,13 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
         me.zoomWindow = new ZoomWindow(me.zoom, me.sizeX, me.sizeY);
         me.background.drawInCenter = false;
         me.canvasLocations = [];
+        me.clickContext = new ClickContext({zoomWindow: me.zoomWindow, player: 1, offset: this.offset});
     }
 
+    SolarCanvas.prototype.onContextMenu = function (e) {
+        this.onMouseDown(e);
+        e.preventDefault();
+    };
     SolarCanvas.prototype.onMouseDown = function (e) {
         this.mouseDown = {
             active: true,
@@ -63,23 +75,25 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
         };
     };
     SolarCanvas.prototype.onMouseUp = function (e) {
-        var x = e.clientX + window.scrollX - this.offset.left;
-        var y =  e.clientY + window.scrollY - this.offset.top;
+
         this.mouseDown = {
             active: false,
             x: null,
             y: null
         };
-
-        var zw = this.zoomWindow;
-        var r = zw.rectangle;
-        var spaceX = r.x + x / zw.ratio;
-        var spaceY = r.y + y / zw.ratio;
-
+        var cc = this.clickContext;
+        cc.update(e);
+        var clickHasTarget = false;
         for(var i = 0; i < this.canvasLocations.length; i++) {
             var location = this.canvasLocations[i];
-            if(location.onClick(x, y, {x: x, y: y, spaceX: spaceX, spaceY: spaceY})) {
+            if(location.onClick(cc)) {
+                clickHasTarget = true;
                 break;
+            }
+        }
+        if(!clickHasTarget) {
+            if(cc.playerShip && cc.button === 'right') {
+                cc.playerShip.setCourse(cc.spaceX, cc.spaceY);
             }
         }
     };
@@ -94,21 +108,26 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
     SolarCanvas.prototype.start = function () {
         var me = this;
         var context = me.context;
-        var ships = [new SpaceShip(SolarSystem.radius, SolarSystem.radius, {name: 'solar'})];
-       /*!function() {
+        var ships = [new SpaceShip(new SpaceShipParams({
+            x: SolarSystem.radius, y: SolarSystem.radius, name: 'solar', imagePath: 'ship.png', radius: 0.1}
+        ))];
+       !function() {
             var size = Math.min(context.canvas.width, context.canvas.height);
             var center = {x: size / 2, y: size / 2};
             var planetoid = Planets.earth;
-            var orbitRadius = planetoid.orbit * me.zoomWindow.ratio;
-            var x = Math.cos(planetoid.angle) * orbitRadius + center.x + planetoid.radius * me.zoomWindow.ratio;
-            var y = Math.sin(planetoid.angle) * orbitRadius + center.y+ planetoid.radius * me.zoomWindow.ratio;
-            ships.push(new SpaceShip(x / me.zoomWindow.ratio, y/ me.zoomWindow.ratio, {name: 'player'}))
-        }();*/
+            var ratio = me.zoomWindow.getRatio();
+            var orbitRadius = planetoid.orbit * ratio;
+            var x = Math.cos(planetoid.angle) * orbitRadius + center.x + planetoid.radius * ratio;
+            var y = Math.sin(planetoid.angle) * orbitRadius + center.y+ planetoid.radius * ratio;
+            ships.push(new SpaceShip(new SpaceShipParams({
+                x: x / ratio, y: y/ ratio, name: 'player', player: 1, angle: Math.PI, imagePath: 'ship.png', radius: 0.1})))
+        }();
         setInterval(function () {
             me.context.clearRect(0, 0, me.sizeX, me.sizeY);
             me.canvasLocations = [];
             me.background.draw(context);
             var zoomWindow = me.getZoomWindow();
+            zoomWindow.updateRatio();
             for (var planetName in Planets) {
                 if (Planets.hasOwnProperty(planetName)) {
                     var planet = Planets[planetName];
@@ -117,13 +136,17 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
                     }
                 }
             }
-            /*for(var i = 0; i < ships.length; i++) {
+            for(var i = 0; i < ships.length; i++) {
                 ships[i].draw(context, zoomWindow, me.canvasLocations);
-            }*/
-        }, 250);
+            }
+        }, 20);
     };
 
 
+
+    SolarCanvas.prototype.addListener = function (clb) {
+        this.subscribers.push(clb);
+    };
 
     SolarCanvas.prototype.getZoomWindow = function () {
         return this.zoomWindow;
@@ -161,7 +184,9 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow', 'So
         this.sizeY = screen.height;
         this.canvas.width = this.sizeX;
         this.canvas.height = this.sizeY;
-        this.offset = Dom.calculateOffset(this.canvas);
+        var offset = Dom.calculateOffset(this.canvas);
+        this.offset.left = offset.left;
+        this.offset.top = offset.top;
         this.background.width = this.sizeX;
         this.background.height = this.sizeY;
     };

@@ -12,7 +12,7 @@ Engine.define("CanvasPathBuilder", function(){
                 path = module;
                 break;
         }
-        return (path ? 'assets/js/org/forweb/canvas/' + path + ".js?seed" + this.seed  : '');
+        return (path ? 'assets/js/org/forweb/canvas/' + path + ".js?seed=" + this.seed  : '');
     };
 
     return CanvasPathBuilder;

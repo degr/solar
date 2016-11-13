@@ -1,26 +1,60 @@
-Engine.define('SpaceShip', ['CanvasImage', 'CanvasClickProxy'], function() {
+Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTask', 'CanvasClickProxy'], function() {
 
     var CanvasImage = Engine.require('CanvasImage');
+    var SpaceShipParams = Engine.require('SpaceShipParams');
     var CanvasClickProxy = Engine.require('CanvasClickProxy');
+    var Geometry = Engine.require('Geometry');
+    var FlyTask = Engine.require('FlyTask');
 
-    function SpaceShip(x, y, params) {
-        this.x = x;
-        this.y = y;
-        this.name = params.name;
-        this.radius = 0.1;
-        this.image = new CanvasImage(-10, -10, "/solar/assets/images/ships/ship.png", this.radius, this.radius);
+    function SpaceShip(params) {
+        if(!(params instanceof SpaceShipParams)) {
+            throw "Ship should be instantiated with SpaceShipParams class"
+        }
+        this.params = params;
     }
 
-    SpaceShip.prototype.onClick = function(params) {
-        console.log(params)
+    SpaceShip.prototype.onClick = function(clickContext) {
+        if(this.params.player === clickContext.player) {
+            clickContext.playerShip = this;
+        } else {
+            clickContext.playerShip = null;
+        }
+        clickContext.infoObject = this;
     };
-    SpaceShip.prototype.draw = function(context, zoomWindow, locations) {
+    SpaceShip.prototype.onMove = function() {
+        var flyTasks = this.params.flyTasks;
+        var length = flyTasks.length;
+        if(length === 0) {
+            return;
+        }
+        var acceleration = this.params.acceleration / flyTasks.length;
+        while(length--) {
+            var task = flyTasks[length];
+            task.onTick(this.params, length, acceleration);
+            if(task.isFinished()) {
+                flyTasks.splice(length, 1);
+            }
+        }
+    };
 
-        var fixed = zoomWindow.canvasCoordinates(this.x, this.y);
+
+    SpaceShip.prototype.setCourse = function(spaceX, spaceY) {
+        this.params.courseX = spaceX;
+        this.params.courseY = spaceY;
+        this.params.flyTasks.unshift(new FlyTask(this.params.x, this.params.y, spaceX, spaceY));
+
+        //SpaceShip.lines.push([this.params.x, this.params.y, spaceX, spaceY]);
+
+    };
+
+    SpaceShip.prototype.draw = function(context, zoomWindow, locations) {
+        var params = this.params;
+        this.onMove();
+        var ratio = zoomWindow.getRatio();
+        var fixed = zoomWindow.canvasCoordinates(params.x, params.y);
         var canvasX = fixed.x;
         var canvasY = fixed.y;
-
-        var canvasRadius = zoomWindow.ratio * this.radius;
+        var canvasRadius = ratio * params.radius;
         if(canvasRadius < 16) {
             canvasRadius = 16;
         }
@@ -29,21 +63,43 @@ Engine.define('SpaceShip', ['CanvasImage', 'CanvasClickProxy'], function() {
             context.arc(canvasX, canvasY, canvasRadius, 0, Math.PI * 2);
             context.stroke();
             context.strokeStyle = '';
-            context.strokeText(this.name, canvasX, canvasY);
+            context.strokeText(params.name, canvasX, canvasY);
        /// } else {
-            this.image.width = canvasRadius;
-            this.image.height = canvasRadius;
-            this.image.x = canvasX;
-            this.image.y = canvasY;
-            this.image.draw(context);
+        params.image.width = canvasRadius * 2;
+        params.image.height = canvasRadius* 2;
+        params.image.x = canvasX;
+        params.image.y = canvasY;
+        params.image.angle = params.angle;
+        params.image.draw(context);
+
+        if(params.courseX !== null && params.courseY !== null) {
+            var courseFixed = zoomWindow.canvasCoordinates(params.courseX, params.courseY);
+            context.beginPath();
+            context.moveTo(canvasX, canvasY);
+            context.lineTo(courseFixed.x, courseFixed.y);
+            context.strokeStyle = '#00FF40';
+            context.stroke();
+            /*for(var i = 0;i < SpaceShip.lines.length;i++) {
+                var l = SpaceShip.lines[i];
+                var a = zoomWindow.canvasCoordinates(l[0], l[1]);
+                var b = zoomWindow.canvasCoordinates(l[2], l[3]);
+                context.beginPath();
+                context.moveTo(a.x, a.y);
+                context.lineTo(b.x, b.y);
+                context.strokeStyle = 'red';
+                context.stroke();
+            }*/
+        }
       //  }
         var me = this;
         locations.push(
-            new CanvasClickProxy(canvasX, canvasY, canvasRadius, function(params){
-                me.onClick(params);
+            new CanvasClickProxy(canvasX, canvasY, canvasRadius, function(clickContext){
+                me.onClick(clickContext);
             })
         )
     };
+
+    //SpaceShip.lines = [];
 
     return SpaceShip;
 });

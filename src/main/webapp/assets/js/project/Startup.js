@@ -1,11 +1,10 @@
-Engine.define('Startup', ['SolarCanvas'], function () {
+Engine.define('Startup', ['SolarWrapper'], function () {
 
-    var SolarCanvas = Engine.require('SolarCanvas');
+    var SolarWrapper = Engine.require('SolarWrapper');
     var Startup = {
         start: function () {
-            var solarCanvas = new SolarCanvas();
-            solarCanvas.beforeOpen();
-            solarCanvas.start();
+            var solarWrapper = new SolarWrapper();
+            solarWrapper.start();
         }
     };
     return Startup;

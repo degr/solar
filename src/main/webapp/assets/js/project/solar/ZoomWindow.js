@@ -6,7 +6,7 @@ Engine.define('ZoomWindow', 'SolarSystem', function () {
         this.zoom = zoom;
         this.scale = Math.pow(2, zoom - 1);
         this.ratio = this.calculateRatio(canvasX, canvasY);
-        this.growingFactor = 1;
+        this.growingRatio = this.ratio;
         this.increase = true;
         this.rectangle = this.getClearRect(canvasX, canvasY);
     }
@@ -66,7 +66,7 @@ Engine.define('ZoomWindow', 'SolarSystem', function () {
         var d = 1000000;
         var r = rect || this.rectangle;
         console.log('rect: x: ' + r.x / d + " y:" + r.y / d + " width: " + r.width / d + " height: " + r.height / d);
-    }
+    };
     ZoomWindow.prototype.onDrag = function (x, y, mouseDown) {
         var rX = (mouseDown.x - x) / this.ratio;
         var rY = (mouseDown.y - y) / this.ratio;
@@ -108,25 +108,21 @@ Engine.define('ZoomWindow', 'SolarSystem', function () {
         rect.y = this.rectangle.y + shiftY - oldHeight;
     };
 
-    ZoomWindow.prototype.getFactor = function () {
-        if (this.increase && this.growingFactor < this.scale) {
-            this.growingFactor += 0.1;
-        } else if (!this.increase && this.growingFactor > this.scale) {
-            this.growingFactor -= 0.1;
+    ZoomWindow.prototype.updateRatio = function () {
+        if (this.increase && this.growingRatio < this.ratio) {
+            this.growingRatio += 0.1;
+        } else if (!this.increase && this.growingRatio > this.ratio) {
+            this.growingRatio -= 0.1;
         }
-        return this.growingFactor;
+    };
+    ZoomWindow.prototype.getRatio = function () {
+        return this.ratio;
     };
     ZoomWindow.prototype.canvasCoordinates = function (x, y) {
-        if(this.zoom === 1) {
-            return {x: x * this.ratio, y: y*this.ratio};
-        } else {
-            var rect = this.rectangle;
-            var dx = x - rect.x;
-            var dy = y - rect.y;
-            return {
-                x: dx*this.ratio,
-                y: dy*this.ratio
-            }
+        var rect = this.rectangle;
+        return {
+            x: (x - rect.x)*this.ratio,
+            y: (y - rect.y)*this.ratio
         }
     };
 
