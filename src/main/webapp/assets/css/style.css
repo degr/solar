@@ -11,8 +11,9 @@ body, html{
     position: absolute;
 }
 
-.Popup .minimized{
-
+.Popup.minimized{
+    height: 34px;
+    overflow: hidden;
 }
 .Popup {
     position: absolute;
@@ -29,4 +30,11 @@ body, html{
     width: 16px;
     position: absolute;
     right: 10px;
+}
+.Popup .panel-body {
+    min-height: 160px
+}
+.Popup .panel-heading {
+    border-bottom: 1px solid gray;
+    padding-bottom: 6px;
 }
