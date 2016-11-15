@@ -26,13 +26,14 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow',
         me.offset = {};
         me.updateZoomWindow = false;
         me.mouseDown = {active: false, x: null, y: null};
+
         Dom.addListeners(me.canvas, {
             onmousemove: function (e) {
                 me.onMouseMove(e)
             },
-            /*DOMMouseScroll: function (e) {
+            DOMMouseScroll: function (e) {
                 me.onScroll(e)
-            },*/
+            },
             mousewheel: function (e) {
                 me.onScroll(e)
             },
@@ -68,6 +69,7 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow',
         e.preventDefault();
     };
     SolarCanvas.prototype.onMouseDown = function (e) {
+        if(e.button !== 0)return;
         this.mouseDown = {
             active: true,
             x: e.clientX + window.scrollX - this.offset.left,
