@@ -6,7 +6,7 @@ Engine.define("PathBuilder", function(){
     PathBuilder.prototype.buildPath = function(module) {
         var path = null;
         switch (module) {
-            case 'ShipPopup':
+            case 'InfoPopup':
                 path = 'components/popups/' + module;
                 break;
             case 'ClickContext':
@@ -14,12 +14,14 @@ Engine.define("PathBuilder", function(){
                 break;
             case 'FlyTask':
             case 'SpaceShip':
+            case 'SpaceShipInfo':
             case 'SpaceShipParams':
                 path = 'ships/' + module;
                 break;
             case 'Planet':
             case 'Planets':
             case 'ZoomWindow':
+            case 'PlanetInfo':
             case 'SolarSystem':
             case 'SolarCanvas':
             case 'SolarWrapper':

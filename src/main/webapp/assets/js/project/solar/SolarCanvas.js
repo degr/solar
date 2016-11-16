@@ -15,8 +15,9 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow',
     var Profile = Engine.require('Profile');
 
 
-    function SolarCanvas() {
+    function SolarCanvas(context, infoPopup) {
         var me = this;
+        me.context = context;
         me.canvas = document.createElement('canvas');
         me.canvas.className = 'solar';
         me.sizeX = null;
@@ -61,7 +62,7 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow',
         me.zoomWindow = new ZoomWindow(me.zoom, me.sizeX, me.sizeY);
         me.background.drawInCenter = false;
         me.canvasLocations = [];
-        me.clickContext = new ClickContext({zoomWindow: me.zoomWindow, player: 1, offset: this.offset});
+        me.clickContext = new ClickContext({infoPopup: infoPopup, zoomWindow: me.zoomWindow, player: 1, offset: this.offset});
     }
 
     SolarCanvas.prototype.onContextMenu = function (e) {
@@ -94,8 +95,10 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Planets', 'Dom', 'ZoomWindow',
             }
         }
         if(!clickHasTarget) {
-            if(cc.playerShip && cc.button === 'right') {
-                cc.playerShip.setCourse(cc.spaceX, cc.spaceY);
+            if(cc.playerShip) {
+                if(cc.button === 'right') {
+                    cc.playerShip.setCourse(cc.spaceX, cc.spaceY);
+                }
             }
         }
     };

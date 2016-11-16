@@ -13,10 +13,10 @@ Engine.define("CanvasClickProxy", function(){
         if ( dx+dy <= this.r ) return true;
         return ( dx*dx + dy*dy <= Math.pow(this.r, 2));
     };
-    CanvasClickProxy.prototype.onClick = function(params) {
-        if (this.inCircle(params.x, params.y)) {
-            this.callback(params);
-            return true;
+    CanvasClickProxy.prototype.onClick = function(clickContext) {
+        if (this.inCircle(clickContext.x, clickContext.y)) {
+            var out = this.callback(clickContext);
+            return out === undefined ? true : out;
         }
         return false;
     };

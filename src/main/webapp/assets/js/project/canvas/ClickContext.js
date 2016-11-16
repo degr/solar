@@ -12,7 +12,7 @@ Engine.define('ClickContext', 'CanvasImage', function() {
         this.zoomWindow = params.zoomWindow;
         this.button = null;
         this.playerShip = null;//player ship object. Null if ship is not selected
-        this.infoObject = null;//object that will build information window
+        this.infoPopup = params.infoPopup;//object that will build information window
         if(!this.zoomWindow) {
             throw 'ZoomWindow is required field for ClickContext';
         }

@@ -36,5 +36,19 @@ body, html{
 }
 .Popup .panel-heading {
     border-bottom: 1px solid gray;
-    padding-bottom: 6px;
+    padding-bottom: 2px;
+    margin-bottom: 7px;
+}
+
+.info-popup h3{
+    margin: 0;
+}
+.info-popup .formfield-holder {
+    min-height: 27px;
+    clear: both;
+}
+.info-popup input {
+    float: right;
+    clear: both;
+    width: 105px;
 }

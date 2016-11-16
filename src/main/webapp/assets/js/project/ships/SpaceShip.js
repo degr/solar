@@ -1,10 +1,12 @@
-Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTask', 'CanvasClickProxy'], function() {
+Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTask', 'CanvasClickProxy', 'Dom', 'SpaceShipInfo'], function() {
 
     var CanvasImage = Engine.require('CanvasImage');
     var SpaceShipParams = Engine.require('SpaceShipParams');
     var CanvasClickProxy = Engine.require('CanvasClickProxy');
+    var SpaceShipInfo = Engine.require('SpaceShipInfo');
     var Geometry = Engine.require('Geometry');
     var FlyTask = Engine.require('FlyTask');
+    var Dom = Engine.require('Dom');
 
     function SpaceShip(params) {
         if(!(params instanceof SpaceShipParams)) {
@@ -14,13 +16,23 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
     }
 
     SpaceShip.prototype.onClick = function(clickContext) {
+        this.selected = true;
         if(this.params.player === clickContext.player) {
             clickContext.playerShip = this;
         } else {
             clickContext.playerShip = null;
         }
-        clickContext.infoObject = this;
+        this.drawInfo(clickContext);
     };
+
+
+    SpaceShip.prototype.drawInfo = function(clickContext) {
+        var info = new SpaceShipInfo(this.params);
+        clickContext.infoPopup.setTitle(Dom.el('h3', null, 'Spaceship ' + this.params.player));
+        clickContext.infoPopup.setContent(info);
+    };
+
+
     SpaceShip.prototype.onMove = function() {
         var flyTasks = this.params.flyTasks;
         var length = flyTasks.length;
@@ -34,6 +46,10 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
             if(task.isFinished()) {
                 flyTasks.splice(length, 1);
             }
+        }
+        if(flyTasks.length === 0) {
+            this.params.courseX = null;
+            this.params.courseY = null;
         }
     };
 
@@ -58,19 +74,21 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
         if(canvasRadius < 16) {
             canvasRadius = 16;
         }
-       // if(!this.image.isLoaded) {
+        if(this.selected) {
             context.beginPath();
             context.arc(canvasX, canvasY, canvasRadius, 0, Math.PI * 2);
             context.stroke();
             context.strokeStyle = '';
             context.strokeText(params.name, canvasX, canvasY);
-       /// } else {
+        }
         params.image.width = canvasRadius * 2;
         params.image.height = canvasRadius* 2;
         params.image.x = canvasX;
         params.image.y = canvasY;
         params.image.angle = params.angle;
         params.image.draw(context);
+
+
 
         if(params.courseX !== null && params.courseY !== null) {
             var courseFixed = zoomWindow.canvasCoordinates(params.courseX, params.courseY);

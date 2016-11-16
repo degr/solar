@@ -1,16 +1,12 @@
-Engine.define('SolarWrapper', ['SolarCanvas', 'ShipPopup'], function () {
+Engine.define('SolarWrapper', ['SolarCanvas', 'InfoPopup'], function () {
 
-    var ShipPopup = Engine.require('ShipPopup');
+    var InfoPopup = Engine.require('InfoPopup');
     var SolarCanvas = Engine.require('SolarCanvas');
 
 
-    function SolarWrapper() {
-        this.shipPopup = new ShipPopup();
-        this.solarCanvas = new SolarCanvas();
-        var me = this;
-        this.solarCanvas.addListener(function(params){
-            me.shipPopup.update(params);
-        })
+    function SolarWrapper(context) {
+        this.infoPopup = new InfoPopup();
+        this.solarCanvas = new SolarCanvas(context, this.infoPopup);
     }
 
     SolarWrapper.prototype.start = function() {

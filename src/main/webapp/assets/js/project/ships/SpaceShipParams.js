@@ -14,7 +14,6 @@ Engine.define('SpaceShipParams', 'CanvasImage', function() {
         this.radius = params.radius;
         this.image = new CanvasImage(-10, -10, this.imagePath, this.radius);
         this.acceleration = params.acceleration || 0.03;
-        this.speed = params.speed || 0;
         this.player = params.player || 0;
         this.courseX = params.courseX || null;
         this.courseY = params.courseY || null;

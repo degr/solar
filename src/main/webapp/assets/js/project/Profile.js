@@ -1,4 +1,8 @@
-Engine.define("Profile", {
-    path: '/solar',
-    speed: (1200 /*year per minute with 50 FPS*/) * 60 * 24 * 365
+Engine.define("Profile", function () {
+    var Profile = {
+        path: '/solar',
+        fps: 50
+    };
+    Profile.speed = (24 * Profile.fps) * 60 * 24 * 365
+    return Profile;
 });
