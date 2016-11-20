@@ -1,12 +1,15 @@
-Engine.define('Planet', ['SolarSystem', 'Profile', 'PlanetInfo', 'CanvasClickProxy'], function(){
+Engine.define('Planet', ['SolarSystem', 'Profile','Renderable', 'PlanetInfo', 'CanvasClickProxy'], function(){
 
     var CanvasClickProxy = Engine.require('CanvasClickProxy');
     var SolarSystem = Engine.require('SolarSystem');
     var PlanetInfo = Engine.require('PlanetInfo');
     var Profile = Engine.require('Profile');
+    var Renderable = Engine.require('Renderable');
     var Dom = Engine.require('Dom');
 
     function Planet(name, data) {
+        Renderable.apply(this, arguments);
+
         this.name = name;
         if(data.orbit === undefined)throw "Invalid orbit";
         this.orbit = data.orbit;
@@ -31,6 +34,7 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'PlanetInfo', 'CanvasClickPro
             }
         }
     }
+    Planet.prototype = Object.create(Renderable.prototype);
 
     Planet.prototype.draw = function(context, zoomWindow, locations) {
         var planetInfo = Planet.drawPlanetoid(
@@ -62,7 +66,7 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'PlanetInfo', 'CanvasClickPro
                 }
             } else {
                 for (var j = 0; j < this.satellites.length; j++) {
-                    Planet.updateAngle(this.satellites[j]);
+                    this.satellites[j].updateAngle();
                 }
             }
         }
@@ -77,12 +81,19 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'PlanetInfo', 'CanvasClickPro
     };
 
 
-    Planet.updateAngle = function(planetoid) {
-        if(planetoid.speed) {
-            if(planetoid.backMove) {
-                planetoid.angle -= Math.PI / (planetoid.speed * Profile.speed);
+    Planet.prototype.updateAngle = function() {
+        if(this.speed > 0) {
+            var value =  (2 * Math.PI) / (this.speed * Profile.speed);
+
+            if(this.backMove) {
+                this.angle -= value;
             } else {
-                planetoid.angle += Math.PI / (planetoid.speed * Profile.speed);
+                this.angle += value;
+            }
+            if(this.angle > 2 * Math.PI) {
+                this.angle -= 2 * Math.PI;
+            } else if(this.angle < 0) {
+                this.angle += 2 * Math.PI;
             }
         }
     };
@@ -93,12 +104,13 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'PlanetInfo', 'CanvasClickPro
         infoPopup.setContent(planetInfo.container);
     };
 
+
     Planet.prototype.drawMenu = function(clickContext) {
 
     };
 
     Planet.drawPlanetoid = function(planetoid, context, zoomWindow, locations, colors, shiftX, shiftY) {
-        Planet.updateAngle(planetoid);
+        planetoid.updateAngle(planetoid);
         var orbitRadius = planetoid.orbit;
         var ratio = zoomWindow.getRatio();
         var planetRadius = planetoid.radius * ratio;
@@ -113,7 +125,7 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'PlanetInfo', 'CanvasClickPro
                 orbitRadius* ratio,
                 planetoid.angle ,
                 planetoid.angle + Math.PI / 4,
-                false
+                true
             );
         } else {
             context.arc(
@@ -128,25 +140,27 @@ Engine.define('Planet', ['SolarSystem', 'Profile', 'PlanetInfo', 'CanvasClickPro
         context.stroke();
 
         context.strokeStyle = colors.planetoid;
+        var pseudoRadius = planetRadius < 5 ? 5 : planetRadius;
         if (!planetoid.imageLoaded) {
             context.beginPath();
-            context.arc(x, y, planetRadius < 5 ? 5 : planetRadius, 0, Math.PI * 2);
+            context.arc(x, y, pseudoRadius, 0, Math.PI * 2);
             context.stroke();
         } else {
-            var pseudoRadius = planetRadius < 5 ? 5 : planetRadius;
             context.drawImage(planetoid.image, x - pseudoRadius, y - pseudoRadius, pseudoRadius * 2, pseudoRadius * 2 );
         }
 
         /*context.textAlign = 'center';
         context.strokeStyle = colors.label;
         context.strokeText(planetoid.name, x, y);*/
-        locations.push(new CanvasClickProxy(x, y, planetRadius < 5 ? 5 : planetRadius, function(clickContext){
-            if(clickContext.button == 'left') {
-                planetoid.drawInfo(clickContext.infoPopup);
-            } else {
-                planetoid.drawMenu(clickContext);
-            }
-        }));
+        var out =
+
+
+        planetoid.onChange({
+            x: x,
+            y: y,
+            radius: pseudoRadius
+        });
+
         context.strokeStyle = 'black';
         return {
             x: x,

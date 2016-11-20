@@ -1,17 +1,22 @@
 Engine.define("CanvasClickProxy", function(){
-    function CanvasClickProxy(x, y, r, callback) {
-        this.x = x;
-        this.y = y;
-        this.r = r;
+    function CanvasClickProxy(callback) {
+        this.x = 0;
+        this.y = 0;
+        this.radius = 0;
         this.callback = callback;
     }
     CanvasClickProxy.prototype.inCircle = function(x, y) {
         var dx = Math.abs(x-this.x);
-        if (    dx >  this.r) return false;
+        if (dx >  this.radius) return false;
         var dy = Math.abs(y-this.y);
-        if (    dy >  this.r ) return false;
-        if ( dx+dy <= this.r ) return true;
-        return ( dx*dx + dy*dy <= Math.pow(this.r, 2));
+        if (dy >  this.radius ) return false;
+        if (dx+dy <= this.radius ) return true;
+        return ( dx*dx + dy*dy <= Math.pow(this.radius, 2));
+    };
+    CanvasClickProxy.prototype.onChange = function(properties) {
+        this.x = properties.x;
+        this.y = properties.y;
+        this.radius = properties.radius;
     };
     CanvasClickProxy.prototype.onClick = function(clickContext) {
         if (this.inCircle(clickContext.x, clickContext.y)) {

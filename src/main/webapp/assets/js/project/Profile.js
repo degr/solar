@@ -3,6 +3,8 @@ Engine.define("Profile", function () {
         path: '/solar',
         fps: 50
     };
-    Profile.speed = (24 * Profile.fps) * 60 * 24 * 365
+    Profile.interval = 1000 / Profile.fps;
+    Profile.speed = Profile.fps * 60 * 60 * 24 * 365;//speed for planets angle calculation
+
     return Profile;
 });

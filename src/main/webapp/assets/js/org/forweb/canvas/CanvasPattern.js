@@ -22,6 +22,7 @@ Engine.define('CanvasPattern', function() {
     CanvasPattern.prototype.draw = function(context) {
         var me = this;
         if(me.isLoaded) {
+            context.beginPath();
             context.rect(me.x, me.y, me.width, me.height);
             context.fillStyle = me.getPattern(context);
             context.fill();

@@ -1,6 +1,7 @@
-Engine.define('FlyTask', 'Geometry', function() {
+Engine.define('FlyTask', ['Geometry', 'Profile'], function() {
 
     var Geometry = Engine.require('Geometry');
+    var Profile = Engine.require('Profile');
 
     function FlyTask(currentX, currentY, courseX, courseY) {
         this.courseX = courseX;
@@ -14,7 +15,7 @@ Engine.define('FlyTask', 'Geometry', function() {
 
     FlyTask.prototype.calculateDestination = function(currentX, currentY, pointX, pointY) {
         return Math.sqrt(
-            Math.pow(currentX - (pointX === undefined ? this.courseX : pointX),2) +
+            Math.pow(currentX - (pointX === undefined ? this.courseX : pointX), 2) +
             Math.pow(currentY - (pointY === undefined ? this.courseY : pointY), 2)
         );
     };
@@ -40,20 +41,17 @@ Engine.define('FlyTask', 'Geometry', function() {
             }
         }
 
-
         if(this.distance != 0) {
             var ratioX = this.xLength / this.distance;
             var ratioY = this.yLength / this.distance;
-            var speed = this.speed;
+            var speed = this.speed / Profile.fps;
 
             p.x = p.x + ratioX * speed;
             p.y = p.y + ratioY * speed;
 
             var destination = this.calculateDestination(p.x, p.y);
-
-            speed = this.speed;
             while(speed > 0) {
-                destination -= speed;
+                destination -= (speed * Profile.fps);
                 speed -= acceleration;
             }
             this.slowDown = destination < 0;
@@ -104,6 +102,7 @@ Engine.define('FlyTask', 'Geometry', function() {
         } else {
             direction = 0;
         }
+
         if(Math.abs(Math.abs(shipParams.angle) - Math.abs(angle)) < Math.abs(direction)) {
             shipParams.angle = angle;
         } else {

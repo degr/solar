@@ -6,7 +6,7 @@ Engine.define('SpaceShipInfo', ['Dom','Profile', 'GenericForm'], function(){
 
     function SpaceShipInfo(params) {
         var model = {
-            acceleration : (params.acceleration * 1000 * Profile.fps) + " m/s2",
+            acceleration : (params.acceleration * 1000) + " m/s2",
             name : params.name,
             length : (params.radius * 2000) + ' m',
             speed : this.calculateSpeed(params.flyTasks)

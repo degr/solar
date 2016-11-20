@@ -1,4 +1,4 @@
-Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTask', 'CanvasClickProxy', 'Dom', 'SpaceShipInfo'], function() {
+Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Renderable', 'Geometry','FlyTask', 'CanvasClickProxy', 'Dom', 'SpaceShipInfo'], function() {
 
     var CanvasImage = Engine.require('CanvasImage');
     var SpaceShipParams = Engine.require('SpaceShipParams');
@@ -6,30 +6,26 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
     var SpaceShipInfo = Engine.require('SpaceShipInfo');
     var Geometry = Engine.require('Geometry');
     var FlyTask = Engine.require('FlyTask');
+    var Renderable = Engine.require('Renderable');
     var Dom = Engine.require('Dom');
+    var Profile = Engine.require('Profile');
 
     function SpaceShip(params) {
+        Renderable.apply(this, arguments);
         if(!(params instanceof SpaceShipParams)) {
             throw "Ship should be instantiated with SpaceShipParams class"
         }
         this.params = params;
+        this.infoForm = null;
     }
-
-    SpaceShip.prototype.onClick = function(clickContext) {
-        this.selected = true;
-        if(this.params.player === clickContext.player) {
-            clickContext.playerShip = this;
-        } else {
-            clickContext.playerShip = null;
-        }
-        this.drawInfo(clickContext);
-    };
-
+    SpaceShip.prototype = Object.create(Renderable.prototype);
 
     SpaceShip.prototype.drawInfo = function(clickContext) {
-        var info = new SpaceShipInfo(this.params);
+        if(this.infoForm === null) {
+            this.infoForm = new SpaceShipInfo(this.params);
+        }
         clickContext.infoPopup.setTitle(Dom.el('h3', null, 'Spaceship ' + this.params.player));
-        clickContext.infoPopup.setContent(info);
+        clickContext.infoPopup.setContent(this.infoForm);
     };
 
 
@@ -39,7 +35,7 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
         if(length === 0) {
             return;
         }
-        var acceleration = this.params.acceleration / flyTasks.length;
+        var acceleration = this.params.acceleration / Profile.fps /*flyTasks.length **/ ;
         while(length--) {
             var task = flyTasks[length];
             task.onTick(this.params, length, acceleration);
@@ -52,7 +48,6 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
             this.params.courseY = null;
         }
     };
-
 
     SpaceShip.prototype.setCourse = function(spaceX, spaceY) {
         this.params.courseX = spaceX;
@@ -76,10 +71,19 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
         }
         if(this.selected) {
             context.beginPath();
-            context.arc(canvasX, canvasY, canvasRadius, 0, Math.PI * 2);
+            context.arc(canvasX, canvasY, canvasRadius * 1.2, 0, Math.PI * 2);
+
+            context.shadowBlur = 20;
+            context.shadowColor = "steelblue";
+            context.strokeStyle = "steelblue";
+            context.strokeWidth = 1;
             context.stroke();
-            context.strokeStyle = '';
-            context.strokeText(params.name, canvasX, canvasY);
+
+            context.strokeStyle = 'black';
+            context.textAlign = 'center';
+            context.shadowBlur = 0;
+            context.strokeWidth = 1;
+            context.strokeText(params.name, canvasX, canvasY + canvasRadius * 1.2 + 8);
         }
         params.image.width = canvasRadius * 2;
         params.image.height = canvasRadius* 2;
@@ -88,36 +92,36 @@ Engine.define('SpaceShip', ['CanvasImage', 'SpaceShipParams', 'Geometry','FlyTas
         params.image.angle = params.angle;
         params.image.draw(context);
 
-
-
         if(params.courseX !== null && params.courseY !== null) {
             var courseFixed = zoomWindow.canvasCoordinates(params.courseX, params.courseY);
             context.beginPath();
             context.moveTo(canvasX, canvasY);
             context.lineTo(courseFixed.x, courseFixed.y);
             context.strokeStyle = '#00FF40';
+            var d = params.flyTasks[0].distance;
+            context.strokeText(zoomWindow.getReadableDistance(d, d > 1 ? 200 : 0), courseFixed.x, courseFixed.y);
             context.stroke();
-            /*for(var i = 0;i < SpaceShip.lines.length;i++) {
-                var l = SpaceShip.lines[i];
-                var a = zoomWindow.canvasCoordinates(l[0], l[1]);
-                var b = zoomWindow.canvasCoordinates(l[2], l[3]);
-                context.beginPath();
-                context.moveTo(a.x, a.y);
-                context.lineTo(b.x, b.y);
-                context.strokeStyle = 'red';
-                context.stroke();
-            }*/
         }
-      //  }
-        var me = this;
-        locations.push(
-            new CanvasClickProxy(canvasX, canvasY, canvasRadius, function(clickContext){
-                me.onClick(clickContext);
-            })
-        )
+        this.onChange({x: canvasX, y: canvasY, radius: canvasRadius});
+        if(this.infoForm !== null) {
+            var speed;
+            var fl = this.params.flyTasks;
+            if(fl.length === 1) {
+                speed = SpaceShip.correctSpeed(fl[0].speed) + " km/h";
+            } else if(fl.length > 1) {
+                speed = "~" + SpaceShip.correctSpeed(fl[0].speed) + " km/h";
+            } else {
+                speed = 0;
+            }
+            this.infoForm.form.fields.speed.setValue(
+                speed
+            );
+        }
     };
 
-    //SpaceShip.lines = [];
+    SpaceShip.correctSpeed = function(speed){
+        return Math.round((speed * 60 * 60 / 2 /* ?? */) );
+    };
 
     return SpaceShip;
 });

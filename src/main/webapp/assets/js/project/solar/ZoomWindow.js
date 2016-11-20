@@ -24,15 +24,13 @@ Engine.define('ZoomWindow', 'SolarSystem', function () {
             var planetY = planet.getY();
             var topX = planetX - planet.radius;
             var topY = planetY - planet.radius;
-            var bottomX = planetX + planet.radius;
-            var bottomY = planetY + planet.radius;
-            var w = this.rectangle;
-            var wXB = w.x + w.width;
-            var wYB = w.y + w.height;
-            if(topX > w.x && topX < wXB && topY > x.y && topY < wYB) {
+            var r = this.rectangle;
+            var wXB = r.x + r.width;
+            var wYB = r.y + r.height;
+            if(topX > r.x && topX < wXB && topY > x.y && topY < wYB) {
                 return true;
             }
-            return w.x < planetX && w.width + w.x > planetX && w.y < planetY && w.y + w.height > planetY;
+            return r.x < planetX && r.width + r.x > planetX && r.y < planetY && r.y + r.height > planetY;
         }
     };
 
@@ -126,8 +124,73 @@ Engine.define('ZoomWindow', 'SolarSystem', function () {
         }
     };
 
+    ZoomWindow.prototype.onClick = function(e, offset) {
+        var x = e.clientX + window.scrollX - offset.left;
+        var y = e.clientY + window.scrollY - offset.top;
+        var r = this.rectangle;
+        var spaceX = r.x + x / this.ratio;
+        var spaceY = r.y + y / this.ratio;
+        return {
+            x: x,
+            y: y,
+            spaceX: spaceX,
+            spaceY: spaceY,
+            button: e.button === 0 ? 'left' : 'right'
+        }
+    };
+
+    ZoomWindow.prototype.draw = function (context) {
+        var cell = 15;
+        var gridStepX = context.canvas.width / cell;
+        var stepX = this.rectangle.width / cell;
+        context.strokeStyle = "green";
+        var limitX = stepX * cell;
+        context.textAlign = "center";
+        for(var x = 2; x < cell; x++) {
+            context.beginPath();
+            context.moveTo(x * gridStepX, 20);
+            context.lineTo(x * gridStepX, 50);
+            var textX = this.getReadableDistance(stepX * x, limitX);
+            context.strokeText(textX, x* gridStepX, 65);
+            context.stroke();
+        }
 
 
+        var gridStep = context.canvas.height / cell;
+        var stepY = this.rectangle.height / cell;
+        context.strokeStyle = "green";
+        var limitY = stepY * cell;
+        context.textAlign = "left";
+        for(var y = 2; y < cell; y++) {
+            context.beginPath();
+            context.moveTo(20, y * gridStep);
+            context.lineTo(50, y * gridStep);
+            var textY = this.getReadableDistance(stepY * y, limitY);
+            context.strokeText(textY, 65, y* gridStep);
+            context.stroke();
+        }
+    };
+
+
+
+    ZoomWindow.prototype.getReadableDistance = function (text, limit) {
+        var postfix = "km";
+        if(limit < 1) {
+            postfix = "m";
+            text = Math.round(text * 1000 * 1000) / 1000
+        } else if(limit < 10) {
+            text = Math.round(text * 100) / 100
+        } else if (limit < 100) {
+            text = Math.round(text * 10) / 10
+        } else {
+            text = Math.round(text);
+            if(text > 10000) {
+                var str = text + "";
+                text = str.substring(0, 2) + " x10^" + (str.length - 2);
+            }
+        }
+        return text + postfix;
+    };
     ZoomWindow.prototype.toString = function () {
         return "ZoomWindow(zoom: " + this.zoom + "; x:" + this.x + "; y:" + this.y + ")";
     };

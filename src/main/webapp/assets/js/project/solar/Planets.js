@@ -1,7 +1,7 @@
 Engine.define('Planets', ['Planet'], function () {
     var Planet = Engine.require('Planet');
     var data = {
-        neptune: {
+       /* neptune: {
             orbit: 4452940833,
             radius: 24764,
             angle: 0.576,
@@ -36,24 +36,24 @@ Engine.define('Planets', ['Planet'], function () {
             radius: 3396,
             angle: 6.239,
             speed: 1.8
-        },
+        },*/
         earth: {
             orbit: 147098290,
             radius: 6378,
             angle: 0.677,
             speed: 1,
             satellites: [
-                {
+              /*  {
                     name: 'lunar',
                     backMove: true,
                     angle: 0,
                     orbit: 363104,
                     radius: 1737,
                     speed: 0.0747945205479452
-                }
+                }*/
             ]
         },
-        venus: {
+       /* venus: {
             orbit: 107476259,
             radius: 6051,
             angle: 2.010,
@@ -64,7 +64,7 @@ Engine.define('Planets', ['Planet'], function () {
             radius: 2439,
             angle: 4.804,
             speed: 0.24
-        },
+        },*/
         sun: {
             orbit: 0,
             radius:	695700,

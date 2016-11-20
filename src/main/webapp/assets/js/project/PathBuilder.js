@@ -10,6 +10,7 @@ Engine.define("PathBuilder", function(){
                 path = 'components/popups/' + module;
                 break;
             case 'ClickContext':
+            case 'Renderable':
                 path = 'canvas/' + module;
                 break;
             case 'FlyTask':
