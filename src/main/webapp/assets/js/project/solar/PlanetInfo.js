@@ -9,7 +9,7 @@ Engine.define('PlanetInfo', ['Dom', 'GenericForm'], function(){
             diameter : planetoid.radius * 2 + " km",
             satellites : planetoid.satellites ? planetoid.satellites.length : "0",
             turnSpeed : planetoid.speed + ' years',
-            speed: (Math.ceil(planetoid.orbit / (365 * 24))) + " km/h"
+            speed: (Math.ceil(planetoid.orbit * 2 * Math.PI / (365 * 24))) + " km/h"
         };
         var meta = {
             orbit: {

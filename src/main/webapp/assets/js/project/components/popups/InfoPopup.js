@@ -7,8 +7,6 @@ Engine.define('InfoPopup', ['Popup', 'Dom'], function() {
         this.popup = popup;
         this.container = popup.container;
         Dom.addClass(this.container, 'info-popup');
-        this.container.style.left = 0;
-        this.container.style.top = 0;
     }
 
     InfoPopup.prototype.setTitle = function(title) {

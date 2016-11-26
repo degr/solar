@@ -134,6 +134,13 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Dom', 'ZoomWindow',
         this.objects.push(object);
     };
 
+    SolarCanvas.prototype.zoomTo = function (object, scale) {
+        while(scale--) {
+            var cc = this.zoomWindow.canvasCoordinates(object.x, object.y);
+            this.zoomWindow.zoomIn(cc.x, cc.y, this.sizeX, this.sizeY);
+        }
+    };
+
     SolarCanvas.prototype.onResize = function () {
         var screen = ScreenUtils.window();
         this.sizeX = screen.width;

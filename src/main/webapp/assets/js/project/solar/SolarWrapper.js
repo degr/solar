@@ -70,9 +70,11 @@ Engine.define(
                     name: 'player',
                     player: 1,
                     angle: Math.PI,
+                    angleSpeed: Math.PI / 6,
                     imagePath: 'ship.png',
                     radius: 0.1
                 }));
+                me.solarCanvas.zoomTo(spaceShip.params, 25);
                 var spaceShipClickProxy = new CanvasClickProxy(function(clickContext){
                     spaceShip.selected = true;
                     if(spaceShip.params.player === clickContext.player) {

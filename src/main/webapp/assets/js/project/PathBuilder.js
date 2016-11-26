@@ -6,6 +6,9 @@ Engine.define("PathBuilder", function(){
     PathBuilder.prototype.buildPath = function(module) {
         var path = null;
         switch (module) {
+            case 'AngleService':
+                path = 'services/' + module;
+                break;
             case 'InfoPopup':
                 path = 'components/popups/' + module;
                 break;
@@ -18,6 +21,10 @@ Engine.define("PathBuilder", function(){
             case 'SpaceShipInfo':
             case 'SpaceShipParams':
                 path = 'ships/' + module;
+                break;
+            case 'MovementProgram':
+            case 'LinuxMovementProgram':
+                path = 'ships/soft/' + module;
                 break;
             case 'Planet':
             case 'Planets':

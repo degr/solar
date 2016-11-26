@@ -1,11 +1,10 @@
-Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Renderable', 'Geometry','FlyTask', 'CanvasClickProxy', 'Dom', 'SpaceShipInfo'], function() {
+Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Renderable', 'Geometry', 'CanvasClickProxy', 'Dom', 'SpaceShipInfo'], function() {
 
     var CanvasImage = Engine.require('CanvasImage');
     var SpaceShipParams = Engine.require('SpaceShipParams');
     var CanvasClickProxy = Engine.require('CanvasClickProxy');
     var SpaceShipInfo = Engine.require('SpaceShipInfo');
     var Geometry = Engine.require('Geometry');
-    var FlyTask = Engine.require('FlyTask');
     var Renderable = Engine.require('Renderable');
     var Dom = Engine.require('Dom');
     var Profile = Engine.require('Profile');
@@ -19,6 +18,7 @@ Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Rendera
         this.infoForm = null;
     }
     SpaceShip.prototype = Object.create(Renderable.prototype);
+    SpaceShip.constructor = SpaceShip;
 
     SpaceShip.prototype.drawInfo = function(clickContext) {
         if(this.infoForm === null) {
@@ -30,37 +30,94 @@ Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Rendera
 
 
     SpaceShip.prototype.onMove = function() {
-        var flyTasks = this.params.flyTasks;
-        var length = flyTasks.length;
-        if(length === 0) {
+        var params = this.params;
+        var movementProgram = params.movementProgram;
+        if(!movementProgram.isOnCourse()) {
             return;
         }
-        var acceleration = this.params.acceleration / Profile.fps /*flyTasks.length **/ ;
-        while(length--) {
-            var task = flyTasks[length];
-            task.onTick(this.params, length, acceleration);
-            if(task.isFinished()) {
-                flyTasks.splice(length, 1);
-            }
+        var distance = Geometry.distance(params.x, params.y, movementProgram.courseX, movementProgram.courseY);
+        if(params.vector.x === 0 && params.vector.y === 0 && distance < 10) {
+            movementProgram.setShuntingEngine(true);
         }
-        if(flyTasks.length === 0) {
-            this.params.courseX = null;
-            this.params.courseY = null;
+        if(movementProgram.isShuntingEngine()) {
+            var ox = (this.params.x - movementProgram.courseX) / (10 * Profile.fps);
+            var oy = (this.params.y - movementProgram.courseY) / (10* Profile.fps);
+            if(ox > 0 && ox < 0.001) {
+                ox = 0.001;
+            } else if(ox < 0 && ox > -0.001) {
+                ox = -0.001;
+            }
+            if(oy > 0 && oy < 0.001) {
+                oy = 0.001;
+            } else if(oy < 0 && oy > -0.001) {
+                oy = -0.001;
+            }
+            this.params.x -= ox;
+            this.params.y -= oy;
+            if(
+                Math.abs(this.params.x - movementProgram.courseX) < 0.001 &&
+                Math.abs(this.params.y - movementProgram.courseY) < 0.001
+            ) {
+                this.params.x = movementProgram.courseX;
+                this.params.y = movementProgram.courseY;
+            }
+            return;
+        }
+        var angle = Geometry.angle(params.x, params.y, movementProgram.courseX, movementProgram.courseY);
+        var maxTurnSpeed = params.angleSpeed / Profile.fps;
+        var turnSpeed = params.movementProgram.getTurnSpeed(params.x, params.y, params.angle, angle, params.vector, maxTurnSpeed);
+        if(turnSpeed > 1 || turnSpeed < -1) {
+            throw "Invalid turn speed";
+        }
+        params.angle = Geometry.truncateAngle(params.angle + maxTurnSpeed * turnSpeed);
+
+        var maxAcceleration = params.acceleration / Profile.fps;
+        var growAcceleration = params.movementProgram.getAcceleration(params.x, params.y, params.angle, angle, params.vector, maxAcceleration, maxTurnSpeed);
+        if(growAcceleration < 0 || growAcceleration > 1) {
+            throw "Invalid acceleration"
+        }
+        var realAcceleration = maxAcceleration * growAcceleration;
+        if(realAcceleration != 0) {
+            var tickVector = {
+                x: Math.cos(params.angle) * realAcceleration,
+                y: Math.sin(params.angle) * realAcceleration
+            };
+            params.vector = Geometry.vectorSum(params.vector, tickVector);
+        }
+        console.log(Geometry.vectorLength(params.vector), distance);
+        if(distance < 1 && Geometry.vectorLength(params.vector) < 2 ) {
+            movementProgram.setShuntingEngine(true);
+            params.vector.x = 0;
+            params.vector.y = 0;
+        }
+        params.x += params.vector.x;
+        params.y += params.vector.y;
+    };
+
+    SpaceShip.prototype.isArrive = function() {
+        var params = this.params;
+        var vector = params.vector;
+        if(vector.x == 0 && vector.y == 0) {
+            return params.x === params.courseX && params.y === params.courseY
+        } else {
+            return false;
         }
     };
 
     SpaceShip.prototype.setCourse = function(spaceX, spaceY) {
         this.params.courseX = spaceX;
         this.params.courseY = spaceY;
-        this.params.flyTasks.unshift(new FlyTask(this.params.x, this.params.y, spaceX, spaceY));
+        this.params.movementProgram.setCourse(spaceX, spaceY);
 
         //SpaceShip.lines.push([this.params.x, this.params.y, spaceX, spaceY]);
 
     };
 
-    SpaceShip.prototype.draw = function(context, zoomWindow, locations) {
-        var params = this.params;
+    SpaceShip.prototype.draw = function(context, zoomWindow) {
         this.onMove();
+
+        var params = this.params;
+        var movementProgram = params.movementProgram;
         var ratio = zoomWindow.getRatio();
         var fixed = zoomWindow.canvasCoordinates(params.x, params.y);
         var canvasX = fixed.x;
@@ -92,32 +149,50 @@ Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Rendera
         params.image.angle = params.angle;
         params.image.draw(context);
 
-        if(params.courseX !== null && params.courseY !== null) {
-            var courseFixed = zoomWindow.canvasCoordinates(params.courseX, params.courseY);
+        if(!this.isArrive()) {
+            var courseFixed = zoomWindow.canvasCoordinates(movementProgram.courseX, movementProgram.courseY);
             context.beginPath();
             context.moveTo(canvasX, canvasY);
             context.lineTo(courseFixed.x, courseFixed.y);
             context.strokeStyle = '#00FF40';
-            var d = params.flyTasks[0].distance;
+            var d = Geometry.distance(params.x, params.y, movementProgram.courseX, movementProgram.courseY);
             context.strokeText(zoomWindow.getReadableDistance(d, d > 1 ? 200 : 0), courseFixed.x, courseFixed.y);
             context.stroke();
         }
+        context.save();
+        context.beginPath();
+        context.translate(canvasX, canvasY);
+        context.moveTo(0, 0);
+        context.lineTo(this.params.vector.x * zoomWindow.ratio * Profile.fps, this.params.vector.y* zoomWindow.ratio* Profile.fps);
+        context.stroke();
+        context.restore();
+
         this.onChange({x: canvasX, y: canvasY, radius: canvasRadius});
         if(this.infoForm !== null) {
-            var speed;
-            var fl = this.params.flyTasks;
-            if(fl.length === 1) {
-                speed = SpaceShip.correctSpeed(fl[0].speed) + " km/h";
-            } else if(fl.length > 1) {
-                speed = "~" + SpaceShip.correctSpeed(fl[0].speed) + " km/h";
-            } else {
-                speed = 0;
-            }
+            var speed = Geometry.vectorLength(this.params.vector);
             this.infoForm.form.fields.speed.setValue(
                 speed
             );
         }
+        /*if(this.params.vector.x != 0 && this.params.vector.y != 0 && Math.random() * 100 > 95) {
+            SpaceShip.points.push({x: params.x, y: params.y});
+        }
+        for(var i = 0; i < SpaceShip.points.length; i++) {
+            context.beginPath();
+            var c = zoomWindow.canvasCoordinates(SpaceShip.points[i].x, SpaceShip.points[i].y);
+            console.log(c);
+            context.arc(
+                c.x,
+                c.y,
+                3,
+                0,
+                Math.PI * 2
+            );
+            context.stroke();
+        }*/
     };
+
+    SpaceShip.points = [];
 
     SpaceShip.correctSpeed = function(speed){
         return Math.round((speed * 60 * 60 / 2 /* ?? */) );

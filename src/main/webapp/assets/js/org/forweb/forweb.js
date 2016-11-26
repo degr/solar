@@ -1106,6 +1106,8 @@ Engine.define('Popup', ['Dom', 'ScreenUtils'], function () {
             mx: 0,
             my: 0
         };
+        this.width = 0;
+        this.height = 0;
         this.listeners = {
             onmousemove: function (e) {
                 me.onMouseMove(e);
@@ -1179,8 +1181,19 @@ Engine.define('Popup', ['Dom', 'ScreenUtils'], function () {
     Popup.prototype.onMouseMove = function (e) {
         if (this.drag.active) {
             var b = document.body;
-            this.container.style.left = this.drag.x + (e.clientX - this.drag.mx + b.scrollLeft) + 'px';
-            this.container.style.top = this.drag.y + (e.clientY - this.drag.my + b.scrollTop) + 'px';
+            var left = this.drag.x + (e.clientX - this.drag.mx + b.scrollLeft);
+            var top = this.drag.y + (e.clientY - this.drag.my + b.scrollTop);
+            this.container.style.left = left + 'px';
+            this.container.style.top = top + 'px';
+            var win = ScreenUtils.window();
+            var ow = this.container.offsetWidth;
+            if(ow + left > win.width) {
+                this.container.style.left = win.width - ow + 'px';
+            }
+            var oh = this.container.offsetHeight;
+            if(oh + top > win.height) {
+                this.container.style.top = win.height - oh + 'px';
+            }
         }
     };
     Popup.prototype.onDragEnd = function (e) {
@@ -1189,9 +1202,9 @@ Engine.define('Popup', ['Dom', 'ScreenUtils'], function () {
     Popup.prototype.onDragStart = function (e) {
         if (!this.drag.active) {
             this.drag.active = true;
-            this.drag.x = parseInt(this.container.style.left);
-            this.drag.y = parseInt(this.container.style.top);
-
+            var style = this.container.style;
+            this.drag.x = style.left ? parseInt(style.left) : 0;
+            this.drag.y = style.top ? parseInt(style.top) : 0;
             var b = document.body;
             this.drag.mx = e.clientX + b.scrollLeft;
             this.drag.my = e.clientY + b.scrollTop;

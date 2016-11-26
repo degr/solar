@@ -166,12 +166,10 @@ Engine.define('ZoomWindow', 'SolarSystem', function () {
             context.moveTo(20, y * gridStep);
             context.lineTo(50, y * gridStep);
             var textY = this.getReadableDistance(stepY * y, limitY);
-            context.strokeText(textY, 65, y* gridStep);
+            context.strokeText(textY, 65, y * gridStep + 3);
             context.stroke();
         }
     };
-
-
 
     ZoomWindow.prototype.getReadableDistance = function (text, limit) {
         var postfix = "km";
