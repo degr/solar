@@ -40,26 +40,26 @@ Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Rendera
             movementProgram.setShuntingEngine(true);
         }
         if(movementProgram.isShuntingEngine()) {
-            var ox = (this.params.x - movementProgram.courseX) / (10 * Profile.fps);
-            var oy = (this.params.y - movementProgram.courseY) / (10* Profile.fps);
-            if(ox > 0 && ox < 0.001) {
-                ox = 0.001;
-            } else if(ox < 0 && ox > -0.001) {
-                ox = -0.001;
+            var shuntingSpeed = this.params.acceleration / (10 * Profile.fps);
+            var dist = Geometry.distance(this.params.x, this.params.y, movementProgram.courseX, movementProgram.courseY);
+            if(shuntingSpeed > distance) {
+                params.x = movementProgram.courseX;
+                params.y = movementProgram.courseY;
+                params.vector.x = 0;
+                params.vector.y = 0;
+                return;
             }
-            if(oy > 0 && oy < 0.001) {
-                oy = 0.001;
-            } else if(oy < 0 && oy > -0.001) {
-                oy = -0.001;
+
+            var shuntAngle = Geometry.angle(this.params.x, this.params.y, movementProgram.courseX, movementProgram.courseY);
+            var shiftX = Math.cos(shuntAngle) * shuntingSpeed;
+            var shiftY = Math.sin(shuntAngle) * shuntingSpeed;
+            this.params.x += shiftX;
+            if(Geometry.distance(this.params.x, this.params.y, movementProgram.courseX, movementProgram.courseY) > dist) {
+                this.params.x -= 2 * shiftX;
             }
-            this.params.x -= ox;
-            this.params.y -= oy;
-            if(
-                Math.abs(this.params.x - movementProgram.courseX) < 0.001 &&
-                Math.abs(this.params.y - movementProgram.courseY) < 0.001
-            ) {
-                this.params.x = movementProgram.courseX;
-                this.params.y = movementProgram.courseY;
+            this.params.y += shiftY;
+            if(Geometry.distance(this.params.x, this.params.y, movementProgram.courseX, movementProgram.courseY) > dist) {
+                this.params.y -= 2 * shiftY;
             }
             return;
         }
@@ -84,7 +84,6 @@ Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Rendera
             };
             params.vector = Geometry.vectorSum(params.vector, tickVector);
         }
-        console.log(Geometry.vectorLength(params.vector), distance);
         if(distance < 1 && Geometry.vectorLength(params.vector) < 2 ) {
             movementProgram.setShuntingEngine(true);
             params.vector.x = 0;
@@ -167,6 +166,19 @@ Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Rendera
         context.stroke();
         context.restore();
 
+        context.save();
+        context.beginPath();
+        context.translate(canvasX, canvasY);
+        context.moveTo(0, 0);
+        context.strokeStyle = "red";
+        var x = Math.cos(this.params.angle) * 40;
+        var y = Math.sin(this.params.angle) * 40;
+        context.lineTo(x, y);
+        context.stroke();
+        context.restore();
+
+
+
         this.onChange({x: canvasX, y: canvasY, radius: canvasRadius});
         if(this.infoForm !== null) {
             var speed = Geometry.vectorLength(this.params.vector);
@@ -174,6 +186,7 @@ Engine.define('SpaceShip', ['CanvasImage','Profile', 'SpaceShipParams', 'Rendera
                 speed
             );
         }
+
         /*if(this.params.vector.x != 0 && this.params.vector.y != 0 && Math.random() * 100 > 95) {
             SpaceShip.points.push({x: params.x, y: params.y});
         }

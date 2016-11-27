@@ -17,7 +17,7 @@ Engine.define("MovementProgram", function() {
 
     MovementProgram.prototype.isShuntingEngine = function(){
         return this.shuntingEngine;
-    }
+    };
     MovementProgram.prototype.calculateDestination = function(currentX, currentY, pointX, pointY) {
         return Math.sqrt(
             Math.pow(currentX - (pointX === undefined ? this.courseX : pointX), 2) +

@@ -11,7 +11,6 @@ Engine.define('SpaceShipInfo', ['Dom','Profile', 'GenericForm'], function(){
             length : (params.radius * 2000) + ' m',
             speed : this.calculateSpeed(params.flyTasks)
         };
-        console.log(params.speed);
         var meta = {
             name: {
                 label: 'Pilot Name'

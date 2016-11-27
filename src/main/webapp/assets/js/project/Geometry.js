@@ -2,6 +2,11 @@ Engine.define('Geometry', function(){
     var dPi = Math.PI * 2;
 
     var Geometry = {
+        angleDiff: function (a1, a2) {
+            var out = Geometry.truncateAngle(Math.abs(a1 - a2));
+            var opposite = dPi - out;
+            return Math.min(out, opposite);
+        },
         angle: function (x0, y0, x, y) {
             var deltaY = y - y0;
             var deltaX = x - x0;
