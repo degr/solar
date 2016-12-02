@@ -8,6 +8,7 @@ Engine.define(
         'SpaceShip',
         'SpaceShipParams',
         'Planet',
+        'Dom',
         'Planets',
         'ClickContext'
     ],
@@ -19,6 +20,7 @@ Engine.define(
         var SpaceShip = Engine.require('SpaceShip');
         var SpaceShipParams = Engine.require('SpaceShipParams');
         var ClickContext = Engine.require('ClickContext');
+        var Dom = Engine.require('Dom');
         var Planets = Engine.require('Planets');
         var Planet = Engine.require('Planet');
         var CanvasClickProxy = Engine.require('CanvasClickProxy');
@@ -53,7 +55,7 @@ Engine.define(
                 }
             });
             this.clickContext.zoomWindow = this.solarCanvas.zoomWindow;
-            document.body.appendChild(me.solarCanvas.canvas);
+            Dom.append(document.body, me.solarCanvas.canvas);
 
             !function () {
                 context.canvas = me.solarCanvas.canvas;

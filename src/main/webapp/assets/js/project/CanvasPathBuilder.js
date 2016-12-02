@@ -7,6 +7,8 @@ Engine.define("CanvasPathBuilder", function(){
         var path = null;
         switch (module) {
             case 'CanvasImage':
+            case 'CanvasLayer':
+            case 'LayeredCanvas':
             case 'CanvasPattern':
             case 'CanvasClickProxy':
                 path = module;

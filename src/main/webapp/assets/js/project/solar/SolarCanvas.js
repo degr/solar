@@ -1,5 +1,5 @@
 Engine.define('SolarCanvas', ['ScreenUtils', 'Dom', 'ZoomWindow',
-    'SolarSystem', 'CanvasImage','CanvasPattern', 'Profile'], function () {
+    'SolarSystem', 'CanvasImage','CanvasPattern', 'Profile', 'LayeredCanvas'], function () {
 
     var ScreenUtils = Engine.require('ScreenUtils');
     var SolarSystem = Engine.require('SolarSystem');
@@ -8,22 +8,26 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Dom', 'ZoomWindow',
     var CanvasImage = Engine.require('CanvasImage');
     var CanvasPattern = Engine.require('CanvasPattern');
     var Profile = Engine.require('Profile');
+    var LayeredCanvas = Engine.require('LayeredCanvas');
 
 
     function SolarCanvas(context, clickProxyManager) {
         var me = this;
         me.context = context;
         me.clickProxyManager = clickProxyManager;
-        me.canvas = document.createElement('canvas');
-        me.canvas.className = 'solar';
-        me.sizeX = null;
-        me.sizeY = null;
-        me.context = me.canvas.getContext('2d');
+
+        var screen = ScreenUtils.window();
+        me.canvas = new LayeredCanvas(10, screen.width, screen.height);
+        me.canvas.setClass('solar');
+        me.sizeX = screen.width;
+        me.sizeY = screen.height;
+        me.context = me.canvas.getContext(0);
         me.offset = {};
         me.updateZoomWindow = false;
         me.mouseDown = {active: false, x: null, y: null};
 
-        Dom.addListeners(me.canvas, {
+
+        Dom.addListeners(me.canvas.getCanvas(0), {
             onmousemove: function (e) {
                 me.onMouseMove(e)
             },
@@ -145,9 +149,8 @@ Engine.define('SolarCanvas', ['ScreenUtils', 'Dom', 'ZoomWindow',
         var screen = ScreenUtils.window();
         this.sizeX = screen.width;
         this.sizeY = screen.height;
-        this.canvas.width = this.sizeX;
-        this.canvas.height = this.sizeY;
-        var offset = Dom.calculateOffset(this.canvas);
+        this.canvas.resize(this.sizeX, this.sizeY);
+        var offset = Dom.calculateOffset(this.canvas.getCanvas(0));
         this.offset.left = offset.left;
         this.offset.top = offset.top;
         this.background.width = this.sizeX;
